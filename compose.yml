@@ -1,0 +1,32 @@
+name: projeto-korp
+
+services:
+  http-server-projeto-korp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: http-server-projeto-korp:local
+    container_name: http-server-projeto-korp
+    restart: unless-stopped
+    expose:
+      - "8080"
+    networks:
+      - korp-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-projeto-korp
+    restart: unless-stopped
+    depends_on:
+      - http-server-projeto-korp
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
+    networks:
+      - korp-network
+
+networks:
+  korp-network:
+    name: korp-network
+    external: true
