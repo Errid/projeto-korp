@@ -1,0 +1,7 @@
+.git
+.tmp-pdf-tools
+tmp
+output
+.env
+*.log
+README.md

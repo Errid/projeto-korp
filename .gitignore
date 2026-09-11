@@ -1,0 +1,24 @@
+# Ferramentas e arquivos temporarios locais
+.tmp-pdf-tools/
+tmp/
+output/
+
+# Credenciais locais
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Build, testes e logs
+bin/
+dist/
+coverage.out
+*.test
+*.log
+
+# Editores e sistema operacional
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
