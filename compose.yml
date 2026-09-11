@@ -26,6 +26,46 @@ services:
     networks:
       - korp-network
 
+  prometheus:
+    image: prom/prometheus:v3.13.3
+    container_name: prometheus-projeto-korp
+    restart: unless-stopped
+    depends_on:
+      - http-server-projeto-korp
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - korp-network
+
+  grafana:
+    image: grafana/grafana:13.2
+    container_name: grafana-projeto-korp
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - korp-network
+
+volumes:
+  grafana-data:
+  prometheus-data:
+
 networks:
   korp-network:
     name: korp-network
