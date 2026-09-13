@@ -1,0 +1,56 @@
+---
+- name: Provisionar o ambiente Projeto Korp
+  hosts: korp
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: instalar certificados
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: diretorio da key do docker
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: baixar a key do docker
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: repositorio para o apt do docker
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc]
+          https://download.docker.com/linux/ubuntu
+          {{ ansible_distribution_release }} stable
+        filename: docker
+        state: present
+        update_cache: true
+
+    - name: instalar o docker atraves do repositorio
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: ativar o docker
+      ansible.builtin.systemd_service:
+        name: docker
+        state: started
+        enabled: true
