@@ -47,6 +47,7 @@
           - containerd.io
           - docker-buildx-plugin
           - docker-compose-plugin
+          - python3-requests
         state: present
 
     - name: ativar o docker
@@ -54,3 +55,39 @@
         name: docker
         state: started
         enabled: true
+
+    - name: criar rede Docker do projeto
+      community.docker.docker_network:
+        name: korp-network
+        driver: bridge
+        state: present
+        appends: true
+
+    - name: construir imagens e iniciar containers
+      community.docker.docker_compose_v2:
+        project_src: "{{ playbook_dir }}/.."
+        state: present
+        build: always
+
+    - name: aguardar endpoint ficar disponivel
+      ansible.builtin.uri:
+        url: http://localhost/projeto-korp
+        method: GET
+        status_code: 200
+        return_content: true
+      register: endpoint_response
+      retries: 15
+      delay: 2
+      until: endpoint_response.status == 200
+
+    - name: validar conteudo do endpoint
+      ansible.builtin.assert:
+        that:
+          - endpoint_response.json.nome == "Projeto Korp"
+          - endpoint_response.json.horario is defined
+        fail_msg: O endpoint respondeu, mas o JSON nao possui o conteudo esperado.
+        success_msg: O endpoint respondeu corretamente.
+
+    - name: mostrar resposta do endpoint
+      ansible.builtin.debug:
+        msg: "{{ endpoint_response.content }}"
